@@ -98,12 +98,23 @@ function CategoryPage() {
           <span className="text-foreground">{cat.name}</span>
         </nav>
 
-        <div className="mt-6 glass-strong rounded-3xl p-8 md:p-12 shadow-soft relative overflow-hidden">
-          <div className="blob blob-rose w-80 h-80 -top-20 -right-20 animate-blob" />
-          <div className="relative">
-            <div className="text-display text-6xl text-foreground/30">{cat.emoji}</div>
-            <h1 className="mt-3 text-display text-4xl md:text-5xl font-semibold">{cat.name}</h1>
-            <p className="mt-3 text-muted-foreground max-w-2xl">{cat.description}</p>
+        <div className="mt-6 rounded-3xl shadow-soft relative overflow-hidden min-h-[280px] md:min-h-[340px] flex items-end">
+          {/* Background image */}
+          <img
+            src={cat.image}
+            alt={cat.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+          />
+          {/* Gradient overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-background/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
+          <div className="blob blob-rose w-80 h-80 -top-20 -right-20 animate-blob opacity-60" />
+
+          <div className="relative p-8 md:p-12 w-full">
+            <div className="text-display text-6xl text-foreground/40">{cat.emoji}</div>
+            <h1 className="mt-3 text-display text-4xl md:text-5xl font-semibold text-foreground drop-shadow-sm">{cat.name}</h1>
+            <p className="mt-3 text-foreground/80 max-w-2xl">{cat.description}</p>
           </div>
         </div>
 

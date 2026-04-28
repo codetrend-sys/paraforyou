@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Menu, X, Search, Heart, ShoppingBag } from "lucide-react";
-import { products } from "@/data/products";
+import { products, categories } from "@/data/products";
 import { useShop } from "@/contexts/ShopContext";
 import { CartDrawer } from "./CartDrawer";
 import logo from "@/assets/logo-4youpara.jpeg";
@@ -81,8 +81,8 @@ export function Header() {
                 className="h-10 w-10 md:h-11 md:w-11 rounded-full object-cover ring-1 ring-rose-soft transition-transform group-hover:scale-105"
               />
               <div className="hidden sm:flex flex-col leading-tight">
-                <span className="text-display text-lg font-semibold tracking-wide text-foreground">
-                  4You<span className="text-secondary">Para</span>
+                <span className="text-display text-lg font-bold tracking-wide text-rose">
+                 <span className="text-sage">Para</span> 4<span className="text-sage">You</span>
                 </span>
                 <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                   Parapharmacie & Cosmétiques
@@ -145,6 +145,24 @@ export function Header() {
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
+          </div>
+
+          {/* Mini Navbar for Categories */}
+          <div className="hidden lg:flex justify-center transition-all duration-500 mt-2">
+            <nav className="glass-strong rounded-full px-6 py-2 flex items-center gap-6 shadow-soft">
+              {categories.map((c) => (
+                <Link
+                  key={c.slug}
+                  to="/categories/$slug"
+                  params={{ slug: c.slug }}
+                  className="flex items-center gap-1.5 text-[13px] font-medium text-foreground/80 hover:text-rose transition-colors"
+                  activeProps={{ className: "text-rose" }}
+                >
+                  <span>{c.emoji}</span>
+                  <span>{c.name}</span>
+                </Link>
+              ))}
+            </nav>
           </div>
 
           {open && (

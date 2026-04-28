@@ -130,7 +130,11 @@
   html { scroll-behavior: smooth; }
 
   body {
-    background-color: var(--color-background);
+    background-image: url('./assets/background_1.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";

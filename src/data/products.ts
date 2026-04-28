@@ -39,6 +39,10 @@ import p29 from "@/assets/p29.jpg";
 import p30 from "@/assets/p30.jpg";
 import p31 from "@/assets/p31.jpg";
 import p32 from "@/assets/p32.jpg";
+import solLaroche from "@/assets/solaire-laroche.jpg";
+import solEucerin from "@/assets/solaire-eucerin.jpg";
+import solNuxe from "@/assets/solaire-nuxe.jpg";
+import solAvene from "@/assets/solaire-avene.jpg";
 
 export type Category = {
   slug: string;
@@ -237,6 +241,7 @@ export const products: Product[] = [
     ingredients: "Lait d'avoine, Amidon naturel.",
     usage: "Vaporiser à 20 cm des racines, masser et brosser.",
     gradient: "linear-gradient(135deg, oklch(0.88 0.07 80), oklch(0.85 0.06 50))", image: p32 },
+  
 ];
 
 export type Brand = {
@@ -264,6 +269,11 @@ export const brands: Brand[] = [
   { name: "René Furterer", origin: "Provence, France", tagline: "Rituels capillaires", signature: "Complexe 5", gradient: "linear-gradient(135deg, oklch(0.92 0.05 130 / 0.7), oklch(0.85 0.07 115 / 0.5))", accent: "oklch(0.5 0.1 130)", monogram: "RF" },
 ];
 
+import blogRoutineEclat from "@/assets/blog-routine-eclat.jpg";
+import blogSolaire from "@/assets/blog-solaire.jpg";
+import blogArgan from "@/assets/blog-argan.jpg";
+import blogBebe from "@/assets/blog-bebe.jpg";
+
 export type BlogPost = {
   slug: string;
   title: string;
@@ -271,11 +281,12 @@ export type BlogPost = {
   category: string;
   readTime: string;
   date: string;
+  image: string;
 };
 
 export const blogPosts: BlogPost[] = [
-  { slug: "routine-eclat-peau", title: "5 étapes essentielles pour une peau éclatante au naturel", excerpt: "Découvrez la routine experte de nos pharmaciens pour révéler la luminosité de votre teint sans surcharger votre peau.", category: "Visage", readTime: "6 min", date: "12 Avril 2026" },
-  { slug: "proteger-soleil-maroc", title: "Protection solaire : nos conseils pour le climat marocain", excerpt: "SPF, textures, gestes : tout ce qu'il faut savoir pour préserver votre peau du soleil méditerranéen.", category: "Solaire", readTime: "4 min", date: "5 Avril 2026" },
-  { slug: "huile-argan-bienfaits", title: "L'huile d'argan, l'or liquide du Maroc décrypté", excerpt: "Bienfaits, mode d'emploi et faux amis : notre guide complet de l'ingrédient star.", category: "Corps", readTime: "5 min", date: "28 Mars 2026" },
-  { slug: "soin-bebe-douceur", title: "Soin de bébé : choisir des produits sûrs et efficaces", excerpt: "Les critères à connaître absolument et les ingrédients à éviter pour la peau fragile des nourrissons.", category: "Bébé", readTime: "7 min", date: "20 Mars 2026" },
+  { slug: "routine-eclat-peau", title: "5 étapes essentielles pour une peau éclatante au naturel", excerpt: "Découvrez la routine experte de nos pharmaciens pour révéler la luminosité de votre teint sans surcharger votre peau.", category: "Visage", readTime: "6 min", date: "12 Avril 2026", image: blogRoutineEclat },
+  { slug: "proteger-soleil-maroc", title: "Protection solaire : nos conseils pour le climat marocain", excerpt: "SPF, textures, gestes : tout ce qu'il faut savoir pour préserver votre peau du soleil méditerranéen.", category: "Solaire", readTime: "4 min", date: "5 Avril 2026", image: blogSolaire },
+  { slug: "huile-argan-bienfaits", title: "L'huile d'argan, l'or liquide du Maroc décrypté", excerpt: "Bienfaits, mode d'emploi et faux amis : notre guide complet de l'ingrédient star.", category: "Corps", readTime: "5 min", date: "28 Mars 2026", image: blogArgan },
+  { slug: "soin-bebe-douceur", title: "Soin de bébé : choisir des produits sûrs et efficaces", excerpt: "Les critères à connaître absolument et les ingrédients à éviter pour la peau fragile des nourrissons.", category: "Bébé", readTime: "7 min", date: "20 Mars 2026", image: blogBebe },
 ];
