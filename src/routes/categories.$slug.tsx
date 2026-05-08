@@ -5,7 +5,7 @@ import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { SiteShell } from "@/components/site/SiteShell";
 import { ProductCard } from "@/components/site/ProductCard";
-import { categories, products } from "@/data/products";
+import { useProducts, useCategories } from "@/hooks/useData";
 
 const searchSchema = z.object({
   sort: fallback(z.enum(["pop", "asc", "desc", "rating"]), "pop").default("pop"),
@@ -17,14 +17,11 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/categories/$slug")({
   validateSearch: zodValidator(searchSchema),
   loader: ({ params }) => {
-    const cat = categories.find((c) => c.slug === params.slug);
-    if (!cat) throw notFound();
-    return { cat };
+    return { slug: params.slug };
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.cat.name ?? "Catégorie"} — 4YouPara` },
-      { name: "description", content: loaderData?.cat.description ?? "" },
+      { title: `Catégorie — 4YouPara` },
     ],
   }),
   component: CategoryPage,
@@ -39,28 +36,34 @@ export const Route = createFileRoute("/categories/$slug")({
 });
 
 function CategoryPage() {
-  const { cat } = Route.useLoaderData();
+  const { slug } = Route.useLoaderData();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  
+  const cat = useMemo(() => categories.find((c: any) => c.slug === slug), [categories, slug]);
   const { sort, brand, badge, max } = Route.useSearch();
   const navigate = useNavigate({ from: "/categories/$slug" });
 
-  const baseList = useMemo(() => products.filter((p) => p.category === cat.slug), [cat.slug]);
+  const baseList = useMemo(() => products.filter((p: any) => p.category === slug), [products, slug]);
 
   const brandsInCategory = useMemo(
-    () => Array.from(new Set(baseList.map((p) => p.brand))).sort(),
+    () => Array.from(new Set(baseList.map((p: any) => typeof p.brand === 'string' ? p.brand : p.brand?.name).filter(Boolean) as string[])).sort(),
     [baseList]
   );
+
   const badgesInCategory = useMemo(
-    () => Array.from(new Set(baseList.map((p) => p.badge).filter(Boolean) as string[])),
+    () => Array.from(new Set(baseList.map((p: any) => p.badge).filter(Boolean) as string[])),
     [baseList]
   );
   const priceMax = useMemo(
-    () => Math.max(0, ...baseList.map((p) => p.price)),
+    () => Math.max(0, ...baseList.map((p: any) => p.price)),
     [baseList]
   );
   const effectiveMax = max > 0 ? max : priceMax;
 
-  const filtered = baseList.filter((p) => {
-    if (brand && p.brand !== brand) return false;
+  const filtered = baseList.filter((p: any) => {
+    const brandName = typeof p.brand === 'string' ? p.brand : p.brand?.name;
+    if (brand && brandName !== brand) return false;
     if (badge && p.badge !== badge) return false;
     if (max > 0 && p.price > max) return false;
     return true;
@@ -75,17 +78,41 @@ function CategoryPage() {
 
   const setParam = (patch: Partial<{ sort: string; brand: string; badge: string; max: number }>) => {
     navigate({
-      params: { slug: cat.slug },
+      params: { slug },
       search: ((prev: Record<string, unknown>) => ({ ...prev, ...patch })) as never,
     });
   };
 
   const resetFilters = () => {
     navigate({
-      params: { slug: cat.slug },
+      params: { slug },
       search: (() => ({ sort: "pop", brand: "", badge: "", max: 0 })) as never,
     });
   };
+
+  if (productsLoading || categoriesLoading) {
+    return (
+      <SiteShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-4 border-rose-soft border-t-rose animate-spin" />
+            <p className="text-muted-foreground">Préparation de votre sélection...</p>
+          </div>
+        </div>
+      </SiteShell>
+    );
+  }
+
+  if (!cat) {
+    return (
+      <SiteShell>
+        <div className="container mx-auto px-4 py-32 text-center">
+          <h1 className="text-display text-4xl">Catégorie introuvable</h1>
+          <Link to="/categories" className="mt-6 inline-block text-secondary">Retour aux catégories</Link>
+        </div>
+      </SiteShell>
+    );
+  }
 
   const activeCount = (brand ? 1 : 0) + (badge ? 1 : 0) + (max > 0 ? 1 : 0);
 

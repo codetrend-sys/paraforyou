@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { Search, Sparkles, MapPin, ArrowRight } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
-import { brands, products } from "@/data/products";
+import { useBrands, useProducts } from "@/hooks/useData";
 
 export const Route = createFileRoute("/marques")({
   head: () => ({
@@ -17,23 +17,41 @@ export const Route = createFileRoute("/marques")({
 
 function BrandsPage() {
   const [query, setQuery] = useState("");
+  const { data: brands = [], isLoading: brandsLoading } = useBrands();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
 
   const productCountByBrand = useMemo(() => {
     const map = new Map<string, number>();
-    for (const p of products) map.set(p.brand, (map.get(p.brand) ?? 0) + 1);
+    for (const p of products) {
+      const brandName = typeof p.brand === 'string' ? p.brand : p.brand?.name;
+      if (brandName) map.set(brandName, (map.get(brandName) ?? 0) + 1);
+    }
     return map;
-  }, []);
+  }, [products]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return brands;
     return brands.filter(
-      (b) =>
+      (b: any) =>
         b.name.toLowerCase().includes(q) ||
         b.origin.toLowerCase().includes(q) ||
         b.tagline.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, brands]);
+
+  if (brandsLoading || productsLoading) {
+    return (
+      <SiteShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-4 border-rose-soft border-t-rose animate-spin" />
+            <p className="text-muted-foreground animate-pulse">Découverte de nos marques expertes...</p>
+          </div>
+        </div>
+      </SiteShell>
+    );
+  }
 
   return (
     <SiteShell>
@@ -68,7 +86,7 @@ function BrandsPage() {
         </div>
 
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 relative">
-          {filtered.map((b, i) => {
+          {filtered.map((b: any, i: number) => {
             const count = productCountByBrand.get(b.name) ?? 0;
             return (
               <motion.div
@@ -87,6 +105,17 @@ function BrandsPage() {
                     className="absolute inset-0 opacity-90 group-hover:opacity-100 transition-opacity"
                     style={{ background: b.gradient }}
                   />
+
+                  {/* Brand Background Image */}
+                  {b.bgImage && (
+                    <div className="absolute inset-0 overflow-hidden mix-blend-overlay opacity-40 group-hover:opacity-60 transition-opacity duration-500">
+                      <img 
+                        src={b.bgImage} 
+                        alt="" 
+                        className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000"
+                      />
+                    </div>
+                  )}
                   {/* Decorative motif */}
                   <svg
                     className="absolute -right-8 -bottom-8 w-44 h-44 opacity-20 group-hover:opacity-30 group-hover:rotate-12 transition-all duration-700"
@@ -103,10 +132,9 @@ function BrandsPage() {
                   <div className="relative p-6 flex flex-col h-full min-h-[220px]">
                     <div className="flex items-start justify-between">
                       <div
-                        className="h-14 w-14 rounded-2xl glass-strong flex items-center justify-center text-display text-lg font-semibold"
-                        style={{ color: b.accent }}
+                        className="h-14 w-14 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center overflow-hidden shadow-sm"
                       >
-                        {b.monogram}
+                        <img src={b.image} alt={b.name} className="h-full w-full object-contain p-2" />
                       </div>
                       <span className="glass-strong rounded-full px-3 py-1 text-[10px] uppercase tracking-wider text-foreground/70 inline-flex items-center gap-1">
                         <Sparkles className="h-3 w-3" /> {count} produit{count > 1 ? "s" : ""}

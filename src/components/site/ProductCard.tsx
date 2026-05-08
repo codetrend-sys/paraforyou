@@ -68,7 +68,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); addToCart(product.id); }}
-                className="flex-1 gradient-button text-white rounded-full px-3 py-2 text-xs font-medium inline-flex items-center justify-center gap-1.5"
+                className="flex-1 gradient-button text-white rounded-full px-3 py-2 text-xs font-medium inline-flex items-center justify-center gap-1.5 active:scale-95"
               >
                 <ShoppingBag className="h-3.5 w-3.5" /> Ajouter
               </button>
@@ -78,7 +78,9 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           </div>
 
           <div className="p-4">
-            <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground">{product.brand}</p>
+            <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+              {typeof product.brand === 'string' ? product.brand : (product as any).brands?.name || (product as any).brand}
+            </p>
             <h3 className="mt-1 text-display text-lg leading-tight text-foreground line-clamp-2 min-h-[3.4rem]">
               {product.name}
             </h3>

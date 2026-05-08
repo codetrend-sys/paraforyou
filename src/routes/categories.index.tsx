@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
-import { categories, products } from "@/data/products";
+import { useCategories, useProducts } from "@/hooks/useData";
 
 export const Route = createFileRoute("/categories/")({
   head: () => ({
@@ -15,6 +15,22 @@ export const Route = createFileRoute("/categories/")({
 });
 
 function CategoriesPage() {
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+
+  if (categoriesLoading || productsLoading) {
+    return (
+      <SiteShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-4 border-rose-soft border-t-rose animate-spin" />
+            <p className="text-muted-foreground animate-pulse">Exploration de nos univers...</p>
+          </div>
+        </div>
+      </SiteShell>
+    );
+  }
+
   return (
     <SiteShell>
       <div className="container mx-auto px-4 py-12 relative">
@@ -28,8 +44,8 @@ function CategoriesPage() {
         </div>
 
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {categories.map((c, i) => {
-            const count = products.filter((p) => p.category === c.slug).length;
+          {categories.map((c: any, i: number) => {
+            const count = products.filter((p: any) => p.category === c.slug).length;
             return (
               <motion.div
                 key={c.slug}

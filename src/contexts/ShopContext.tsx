@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { products as allProducts, type Product } from "@/data/products";
+import { type Product } from "@/data/products";
+import { useProducts } from "@/hooks/useData";
 
 type CartItem = { id: string; quantity: number };
 
@@ -16,9 +17,9 @@ type ShopContextValue = {
   clearCart: () => void;
   toggleFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
-  getProduct: (id: string) => Product | undefined;
-  getCartProducts: () => Array<{ product: Product; quantity: number }>;
-  getFavoriteProducts: () => Product[];
+  getProduct: (id: string) => any;
+  getCartProducts: () => Array<{ product: any; quantity: number }>;
+  getFavoriteProducts: () => any[];
 };
 
 const ShopContext = createContext<ShopContextValue | null>(null);
@@ -40,6 +41,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  
+  const { data: asyncProducts = [] } = useProducts();
 
   useEffect(() => {
     setCart(readLS<CartItem[]>(CART_KEY, []));
@@ -55,7 +58,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     if (hydrated) localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
   }, [favorites, hydrated]);
 
-  const getProduct = (id: string) => allProducts.find((p) => p.id === id);
+  const getProduct = (id: string) => asyncProducts.find((p: any) => p.id === id);
 
   const addToCart = (id: string, quantity = 1) => {
     const product = getProduct(id);

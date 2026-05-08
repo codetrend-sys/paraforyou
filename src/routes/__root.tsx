@@ -1,5 +1,7 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRouteWithContext, HeadContent, Scripts, useRouteContext } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ShopProvider } from "@/contexts/ShopContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
@@ -24,7 +26,9 @@ function NotFoundComponent() {
   );
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -64,10 +68,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const { queryClient } = useRouteContext({ from: '__root__' });
+  
   return (
-    <ShopProvider>
-      <Outlet />
-      <Toaster position="top-right" />
-    </ShopProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ShopProvider>
+          <Outlet />
+          <Toaster position="top-right" />
+        </ShopProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

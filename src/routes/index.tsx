@@ -2,12 +2,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useRef, useEffect } from "react";
-import { ArrowRight, Truck, ShieldCheck, HeartHandshake, Leaf, Gift, Percent, ChevronLeft, ChevronRight ,Sparkles} from "lucide-react";
+import { ArrowRight, Truck, ShieldCheck, HeartHandshake, Leaf, Gift, Percent, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { ProductCard } from "@/components/site/ProductCard";
 import { CollectionShowcase } from "@/components/site/CollectionShowcase";
 import { HeroSlider } from "@/components/site/HeroSlider";
-import { categories, products, blogPosts, brands } from "@/data/products";
+import { useProducts, useCategories, useBrands, useBlogPosts, useAnnouncements, useHomepageSections } from "@/hooks/useData";
 import kbeautyImg from "@/assets/kbeauty-hero.jpg";
 import solaireImg from "@/assets/cat-solaire.jpg";
 
@@ -24,10 +24,25 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: brands = [], isLoading: brandsLoading } = useBrands();
+  const { data: blogPosts = [], isLoading: blogLoading } = useBlogPosts();
+  const { data: announcementsData, isLoading: announcementsLoading } = useAnnouncements();
+  const { data: homeSections = [], isLoading: sectionsLoading } = useHomepageSections();
+  const announcements = announcementsData?.data;
+
   const featured = products.slice(0, 8);
-  const promos = products.filter((p) => p.oldPrice).slice(0, 3);
-  const kbeautyProducts = products.filter((p) => p.category === "visage").slice(0, 8);
-  const solaireProducts = products.filter((p) => p.category === "solaire").slice(0, 8);
+  const promos = products.filter((p: any) => p.oldPrice).slice(0, 3);
+  const kbeautyProducts = products.filter((p: any) => p.category === "visage").slice(0, 8);
+  const solaireProducts = products.filter((p: any) => p.category === "solaire").slice(0, 8);
+
+  const isLoading = productsLoading || categoriesLoading || brandsLoading || blogLoading || announcementsLoading || sectionsLoading;
+
+  const visibleSections = homeSections.filter((s: any) => s.is_visible).sort((a: any, b: any) => a.order_index - b.order_index);
+  const section0 = visibleSections.find((s: any) => s.order_index === 0) || visibleSections[0];
+  const section1 = visibleSections.find((s: any) => s.order_index === 1 && s.id !== section0?.id);
+  const otherSections = visibleSections.filter((s: any) => s.id !== section0?.id && s.id !== section1?.id);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -79,6 +94,19 @@ function HomePage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <SiteShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-4 border-rose-soft border-t-rose animate-spin" />
+            <p className="text-muted-foreground animate-pulse">Chargement de votre univers beauté...</p>
+          </div>
+        </div>
+      </SiteShell>
+    );
+  }
+
   return (
     <SiteShell>
       {/* HERO CAROUSEL */}
@@ -86,59 +114,59 @@ function HomePage() {
         <HeroSlider />
       </section>
 
-     
-
       {/* TICKER PROMOTIONS (VIVANT & ATTIRANT) */}
-      <section className="relative z-20 mt-8 mb-12 -rotate-2 scale-[1.05] shadow-glow-rose bg-gradient-to-r from-rose-500 via-rose-400 to-rose-500 border-y border-rose-300/30">
-        <div className="overflow-hidden w-full py-5">
-          {/* Vous pouvez modifier la durée (animationDuration) ci-dessous pour ralentir ou accélérer le texte */}
-          <div className="flex gap-12 animate-marquee whitespace-nowrap items-center text-white" style={{ width: "max-content", animationDuration: "45s" }}>
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex items-center gap-12 px-6">
-                <span className="text-display text-2xl font-semibold flex items-center gap-3">
-                  <Percent className="h-7 w-7 text-white animate-pulse" /> VENTES FLASH
-                </span>
-                <span className="text-lg font-light text-white/90 italic">
-                  Jusqu'à <strong className="font-bold text-white">-30%</strong> sur la nouvelle collection
-                </span>
-                <span className="text-display text-2xl font-semibold flex items-center gap-3">
-                  <Sparkles className="h-7 w-7 text-white animate-pulse" /> NOUVELLES RÉDUCTIONS
-                </span>
-                <span className="text-lg font-light text-white/90 italic">
-                  Code promo : <strong className="font-bold text-white underline tracking-wider">BEAUTY26</strong>
-                </span>
-                <span className="text-display text-2xl font-semibold flex items-center gap-3">
-                  <Gift className="h-7 w-7 text-white animate-bounce" /> CADEAU OFFERT
-                </span>
-                <span className="text-lg font-light text-white/90 italic">
-                  Dans chaque commande dès 500 DH
-                </span>
-              </div>
-            ))}
+      {announcements?.is_visible !== false && (
+        <section className="relative z-20 mt-8 mb-12 -rotate-2 scale-[1.05] shadow-glow-rose bg-gradient-to-r from-rose-500 via-rose-400 to-rose-500 border-y border-rose-300/30">
+          <div className="overflow-hidden w-full py-5">
+            <div className="flex gap-12 animate-marquee whitespace-nowrap items-center text-white" style={{ width: "max-content", animationDuration: `${announcements?.animation_duration || 45}s` }}>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center gap-12 px-6">
+                  <span className="text-display text-2xl font-semibold flex items-center gap-3">
+                    <Percent className="h-7 w-7 text-white animate-pulse" /> {announcements?.text1 || 'VENTES FLASH'}
+                  </span>
+                  <span className="text-lg font-light text-white/90 italic">
+                    {announcements?.subtext1 || "Jusqu'à -30% sur la nouvelle collection"}
+                  </span>
+                  <span className="text-display text-2xl font-semibold flex items-center gap-3">
+                    <Sparkles className="h-7 w-7 text-white animate-pulse" /> {announcements?.text2 || 'NOUVELLES RÉDUCTIONS'}
+                  </span>
+                  <span className="text-lg font-light text-white/90 italic">
+                    {announcements?.subtext2 || "Code promo : BEAUTY26"}
+                  </span>
+                  <span className="text-display text-2xl font-semibold flex items-center gap-3">
+                    <Gift className="h-7 w-7 text-white animate-bounce" /> {announcements?.text3 || 'CADEAU OFFERT'}
+                  </span>
+                  <span className="text-lg font-light text-white/90 italic">
+                    {announcements?.subtext3 || "Dans chaque commande dès 500 DH"}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-        {/* SOLAIRE SHOWCASE */}
-      <CollectionShowcase
-        eyebrow="Protection Solaire"
-        title="L'essentiel pour l'été"
-        description="Découvrez notre sélection de crèmes solaires, fluides invisibles et laits après-soleil pour protéger votre peau des rayons UV en toute légèreté."
-        ctaLabel="Explorer Solaire"
-        ctaTo="/categories/solaire"
-        image={solaireImg}
-        products={solaireProducts}
-        accent="sage"
-      />
-
+      {/* Dynamic Section (Order 0) */}
+      {section0 && (
+        <CollectionShowcase
+          eyebrow={section0.eyebrow}
+          title={section0.title}
+          description={section0.description}
+          ctaLabel={section0.cta_label}
+          ctaTo={section0.cta_to || `/categories/${section0.categories?.slug}`}
+          image={section0.image_url}
+          products={products.filter((p: any) => p.category_id === section0.category_id).slice(0, 8)}
+          accent={section0.accent}
+        />
+      )}
 
        {/* CATEGORIES */}
       <section className="py-2">
         <div className="container mx-auto px-4">
           <SectionTitle eyebrow="Univers de soin" title="Explorez nos catégories" />
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {categories.map((c, i) => {
-              const count = products.filter((p) => p.category === c.slug).length;
+            {categories.map((c: any, i: number) => {
+              const count = products.filter((p: any) => p.category === c.slug).length;
               return (
                 <motion.div
                   key={c.slug}
@@ -182,58 +210,62 @@ function HomePage() {
       </section>
 
       {/* ANNONCES PROMOS ATTIRANTES */}
-     <section className="relative z-20 mt-16 mb-4">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="glass-strong rounded-2xl p-5 flex items-center gap-4 hover:shadow-elevated transition-all hover:-translate-y-1 cursor-pointer group">
-              <div className="h-12 w-12 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-500 flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform">
-                <Gift className="h-5 w-5" />
+      {announcements?.is_visible !== false && (
+        <section className="relative z-20 mt-16 mb-4">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="glass-strong rounded-2xl p-5 flex items-center gap-4 hover:shadow-elevated transition-all hover:-translate-y-1 cursor-pointer group">
+                <div className="h-12 w-12 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-500 flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform">
+                  <Gift className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-display font-semibold text-foreground text-base">{announcements?.card1_title || 'Cadeau offert'}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{announcements?.card1_sub || "Dès 500 DH d'achat"}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-display font-semibold text-foreground text-base">Cadeau offert</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Dès 500 DH d'achat</div>
+              
+              <div className="gradient-button text-white rounded-2xl p-5 flex items-center gap-4 hover:shadow-glow-rose transition-all hover:-translate-y-1 cursor-pointer group shadow-soft relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-2 opacity-10 scale-[2.5] -translate-y-1/4 translate-x-1/4">
+                  <Percent className="h-24 w-24" />
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/20 flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform relative z-10">
+                  <Percent className="h-5 w-5" />
+                </div>
+                <div className="relative z-10">
+                  <div className="text-display font-semibold text-white text-base">{announcements?.card2_title || '-20% Solaire'}</div>
+                  <div className="text-xs text-white/90 mt-0.5">{announcements?.card2_sub || 'Code: SUN26'}</div>
+                </div>
               </div>
-            </div>
-            
-            <div className="gradient-button text-white rounded-2xl p-5 flex items-center gap-4 hover:shadow-glow-rose transition-all hover:-translate-y-1 cursor-pointer group shadow-soft relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 opacity-10 scale-[2.5] -translate-y-1/4 translate-x-1/4">
-                <Percent className="h-24 w-24" />
-              </div>
-              <div className="h-12 w-12 rounded-full bg-white/20 flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-                <Percent className="h-5 w-5" />
-              </div>
-              <div className="relative z-10">
-                <div className="text-display font-semibold text-white text-base">-20% Solaire</div>
-                <div className="text-xs text-white/90 mt-0.5">Code: <span className="font-bold tracking-wider">SUN26</span></div>
-              </div>
-            </div>
 
-            <div className="glass-strong rounded-2xl p-5 flex items-center gap-4 hover:shadow-elevated transition-all hover:-translate-y-1 cursor-pointer group">
-              <div className="h-12 w-12 rounded-full bg-sage-100 dark:bg-sage-900/40 text-secondary flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform">
-                <Truck className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-display font-semibold text-foreground text-base">Livraison gratuite</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Partout au Maroc</div>
+              <div className="glass-strong rounded-2xl p-5 flex items-center gap-4 hover:shadow-elevated transition-all hover:-translate-y-1 cursor-pointer group">
+                <div className="h-12 w-12 rounded-full bg-sage-100 dark:bg-sage-900/40 text-secondary flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform">
+                  <Truck className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-display font-semibold text-foreground text-base">{announcements?.card3_title || 'Livraison gratuite'}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{announcements?.card3_sub || 'Partout au Maroc'}</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
 
-       {/* K-BEAUTY SHOWCASE */}
-      <CollectionShowcase
-        eyebrow="Collection K-Beauty"
-        title="Le rituel glass-skin"
-        description="Sérums hydratants, essences et soins venus de Corée pour une peau lumineuse, fraîche et repulpée."
-        ctaLabel="Explorer K-Beauty"
-        ctaTo="/categories"
-        image={kbeautyImg}
-        products={kbeautyProducts}
-        accent="rose"
-      />
-      
+
+      {/* Dynamic Section (Order 1) */}
+      {section1 && (
+        <CollectionShowcase
+          eyebrow={section1.eyebrow}
+          title={section1.title}
+          description={section1.description}
+          ctaLabel={section1.cta_label}
+          ctaTo={section1.cta_to || `/categories/${section1.categories?.slug}`}
+          image={section1.image_url}
+          products={products.filter((p: any) => p.category_id === section1.category_id).slice(0, 8)}
+          accent={section1.accent}
+        />
+      )}
 
       {/* PROMO BANNER */}
       <section className="">
@@ -314,7 +346,7 @@ function HomePage() {
               ref={scrollRef}
               className="flex overflow-x-auto gap-5 pb-8 pt-4 -mx-4 px-4 snap-x snap-mandatory flex-nowrap scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
-              {featured.map((p, i) => (
+              {featured.map((p: any, i: number) => (
                 <div key={p.id} className="w-[260px] md:w-[300px] flex-none snap-start">
                   <ProductCard product={p} index={i} />
                 </div>
@@ -333,6 +365,21 @@ function HomePage() {
       
 
       
+
+      {/* Dynamic Sections 2+ */}
+      {otherSections.map((section: any) => (
+        <CollectionShowcase
+          key={section.id}
+          eyebrow={section.eyebrow}
+          title={section.title}
+          description={section.description}
+          ctaLabel={section.cta_label}
+          ctaTo={section.cta_to || `/categories/${section.categories?.slug}`}
+          image={section.image_url}
+          products={products.filter((p: any) => p.category_id === section.category_id).slice(0, 8)}
+          accent={section.accent}
+        />
+      ))}
 
       {/* AVANTAGES */}
       <section className="py-2">
@@ -373,13 +420,12 @@ function HomePage() {
         </div>
         <div className="relative overflow-hidden">
           <div className="flex gap-6 animate-marquee whitespace-nowrap items-center py-4" style={{ width: "max-content" }}>
-            {[...brands, ...brands].map((b, i) => (
+            {[...brands, ...brands].map((b: any, i: number) => (
               <div key={i} className="flex items-center gap-4 glass px-5 py-3 rounded-full hover:shadow-elevated hover:bg-white dark:hover:bg-black/50 border border-white/40 dark:border-white/10 transition-all cursor-pointer group">
                 <div 
-                  className="h-12 w-12 rounded-full flex shrink-0 items-center justify-center text-white font-semibold text-lg shadow-soft transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: b.gradient }}
+                  className="h-12 w-12 rounded-full flex shrink-0 items-center justify-center bg-white dark:bg-white/10 overflow-hidden shadow-soft transition-transform duration-300 group-hover:scale-110"
                 >
-                  {b.monogram}
+                  <img src={b.image} alt={b.name} className="h-full w-full object-contain p-2" />
                 </div>
                 <div className="flex flex-col pr-2">
                   <span className="text-display text-foreground font-semibold text-lg overflow-hidden leading-tight">{b.name}</span>
@@ -401,7 +447,7 @@ function HomePage() {
             </Link>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {blogPosts.map((post, i) => (
+            {blogPosts.slice(0, 4).map((post: any, i: number) => (
               <motion.div
                 key={post.slug}
                 initial={{ opacity: 0, y: 20 }}
@@ -414,10 +460,8 @@ function HomePage() {
                   params={{ slug: post.slug }}
                   className="group block glass rounded-3xl overflow-hidden hover:shadow-elevated transition-all hover:-translate-y-1"
                 >
-                  <div className="aspect-[4/3] gradient-hero relative overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center text-display text-7xl text-white/40">
-                      ✿
-                    </div>
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    <img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                   </div>
                   <div className="p-5">
                     <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -447,42 +491,4 @@ function SectionTitle({ eyebrow, title, align = "center" }: { eyebrow: string; t
     </div>
   );
 }
- {/* ANNONCES PROMOS ATTIRANTES */}
-      {/* <section className="relative z-20 mt-16 mb-4">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="glass-strong rounded-2xl p-5 flex items-center gap-4 hover:shadow-elevated transition-all hover:-translate-y-1 cursor-pointer group">
-              <div className="h-12 w-12 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-500 flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform">
-                <Gift className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-display font-semibold text-foreground text-base">Cadeau offert</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Dès 500 DH d'achat</div>
-              </div>
-            </div>
-            
-            <div className="gradient-button text-white rounded-2xl p-5 flex items-center gap-4 hover:shadow-glow-rose transition-all hover:-translate-y-1 cursor-pointer group shadow-soft relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-2 opacity-10 scale-[2.5] -translate-y-1/4 translate-x-1/4">
-                <Percent className="h-24 w-24" />
-              </div>
-              <div className="h-12 w-12 rounded-full bg-white/20 flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-                <Percent className="h-5 w-5" />
-              </div>
-              <div className="relative z-10">
-                <div className="text-display font-semibold text-white text-base">-20% Solaire</div>
-                <div className="text-xs text-white/90 mt-0.5">Code: <span className="font-bold tracking-wider">SUN26</span></div>
-              </div>
-            </div>
 
-            <div className="glass-strong rounded-2xl p-5 flex items-center gap-4 hover:shadow-elevated transition-all hover:-translate-y-1 cursor-pointer group">
-              <div className="h-12 w-12 rounded-full bg-sage-100 dark:bg-sage-900/40 text-secondary flex flex-shrink-0 items-center justify-center group-hover:scale-110 transition-transform">
-                <Truck className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-display font-semibold text-foreground text-base">Livraison gratuite</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Partout au Maroc</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section> */}

@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Menu, X, Search, Heart, ShoppingBag } from "lucide-react";
-import { products, categories } from "@/data/products";
+import { Menu, X, Search, Heart, ShoppingBag, User as UserIcon, LogOut ,Sparkles } from "lucide-react";
+import { useProducts, useCategories } from "@/hooks/useData";
 import { useShop } from "@/contexts/ShopContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { CartDrawer } from "./CartDrawer";
 import logo from "@/assets/logo-4youpara.jpeg";
 
@@ -17,6 +18,8 @@ const nav = [
 ] as const;
 
 export function Header() {
+  const { data: products = [] } = useProducts();
+  const { data: categories = [] } = useCategories();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -24,6 +27,19 @@ export function Header() {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { cartCount, favoritesCount } = useShop();
+  const { user, signOut, isAdmin } = useAuth();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -53,10 +69,10 @@ export function Header() {
     if (!q) return [];
     return products
       .filter(
-        (p) =>
+        (p: any) =>
           p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q)
+          (typeof p.brand === 'string' ? p.brand : p.brand?.name)?.toLowerCase().includes(q) ||
+          (typeof p.category === 'string' ? p.category : p.category?.name)?.toLowerCase().includes(q)
       )
       .slice(0, 6);
   }, [query]);
@@ -70,7 +86,7 @@ export function Header() {
       >
         <div className="container mx-auto px-4">
           <div
-            className={`glass-strong rounded-full flex items-center justify-between px-4 md:px-6 py-2.5 transition-all duration-500 ${
+            className={`glass-strong rounded-full flex items-center justify-between px-4 md:px-6 py-2.5 transition-all duration-500 relative z-50 ${
               scrolled ? "shadow-elevated" : "shadow-soft"
             }`}
           >
@@ -137,6 +153,58 @@ export function Header() {
                 )}
               </button>
               
+              <div className="relative">
+                {user ? (
+                  <div className="flex items-center" ref={userMenuRef}>
+                    <button
+                      onClick={() => setUserMenuOpen((v) => !v)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-rose-soft/40 transition-colors text-foreground/70 hover:text-foreground overflow-hidden border border-rose-soft"
+                    >
+                      {user.user_metadata?.avatar_url ? (
+                        <img src={user.user_metadata.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-rose-soft text-rose font-bold text-xs">
+                          {user.email?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </button>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 top-11 z-50 w-48 glass-strong rounded-2xl shadow-elevated py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="px-4 py-2 border-b border-foreground/5 mb-1">
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                          {isAdmin && (
+                            <p className="text-[10px] uppercase tracking-widest text-secondary font-bold mt-1">Administrateur</p>
+                          )}
+                        </div>
+                        {isAdmin && (
+                          <Link
+                            to="/admin"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-rose-soft/40 transition-colors"
+                          >
+                            <Sparkles className="h-4 w-4 text-secondary" /> Dashboard Admin
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => { signOut(); setUserMenuOpen(false); }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose hover:bg-rose-soft/40 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4" /> Se déconnecter
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-rose-soft/40 transition-colors text-foreground/70 hover:text-foreground"
+                    aria-label="Connexion"
+                  >
+                    <UserIcon className="h-4 w-4" />
+                  </Link>
+                )}
+              </div>
+              
               <button
                 onClick={() => setOpen((v) => !v)}
                 className="lg:hidden h-9 w-9 inline-flex items-center justify-center rounded-full hover:bg-rose-soft/40 text-foreground"
@@ -148,9 +216,9 @@ export function Header() {
           </div>
 
           {/* Mini Navbar for Categories */}
-          <div className="hidden lg:flex justify-center transition-all duration-500 mt-2">
+          <div className="hidden lg:flex justify-center transition-all duration-500 mt-2 relative z-40">
             <nav className="glass-strong rounded-full px-6 py-2 flex items-center gap-6 shadow-soft">
-              {categories.map((c) => (
+              {categories.map((c: any) => (
                 <Link
                   key={c.slug}
                   to="/categories/$slug"
@@ -236,7 +304,7 @@ export function Header() {
                     </div>
                   </div>
                 )}
-                {results.map((p) => (
+                {results.map((p: any) => (
                   <Link
                     key={p.id}
                     to="/produit/$id"
@@ -251,7 +319,9 @@ export function Header() {
                       <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{p.brand}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {typeof p.brand === 'string' ? p.brand : p.brand?.name}
+                      </p>
                       <p className="text-sm text-foreground truncate">{p.name}</p>
                     </div>
                     <div className="text-sm font-semibold text-foreground shrink-0">{p.price} DH</div>

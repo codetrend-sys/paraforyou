@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteShell } from "@/components/site/SiteShell";
 import { ProductCard } from "@/components/site/ProductCard";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useData";
 
 export const Route = createFileRoute("/promotions")({
   head: () => ({
@@ -14,7 +14,19 @@ export const Route = createFileRoute("/promotions")({
 });
 
 function PromosPage() {
-  const promos = products.filter((p) => p.oldPrice);
+  const { data: products = [], isLoading } = useProducts();
+  const promos = products.filter((p: any) => p.oldPrice);
+
+  if (isLoading) {
+    return (
+      <SiteShell>
+        <div className="container mx-auto px-4 py-32 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+        </div>
+      </SiteShell>
+    );
+  }
+
   return (
     <SiteShell>
       <div className="container mx-auto px-4 py-12">
@@ -31,9 +43,17 @@ function PromosPage() {
           </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {promos.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
-        </div>
+        {promos.length > 0 ? (
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {promos.map((p: any, i: number) => (
+              <ProductCard key={p.id} product={p} index={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-20 text-center">
+            <p className="text-muted-foreground">Aucune promotion en cours pour le moment.</p>
+          </div>
+        )}
       </div>
     </SiteShell>
   );

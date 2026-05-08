@@ -1,22 +1,20 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Star, Heart, ShoppingBag, ShieldCheck, Truck, ArrowLeft } from "lucide-react";
+import { Star, Heart, ShoppingBag, ShieldCheck, Truck, ArrowLeft, Minus, Plus } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { ProductCard } from "@/components/site/ProductCard";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useData";
+import { useShop } from "@/contexts/ShopContext";
+import { useState } from "react";
 
 export const Route = createFileRoute("/produit/$id")({
   loader: ({ params }) => {
-    const product = products.find((p) => p.id === params.id);
-    if (!product) throw notFound();
-    return { product };
+    return { id: params.id };
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.product.name ?? "Produit"} — 4YouPara` },
-      { name: "description", content: loaderData?.product.description ?? "" },
-      { property: "og:title", content: loaderData?.product.name ?? "" },
-      { property: "og:description", content: loaderData?.product.description ?? "" },
+      { title: `Produit — 4YouPara` },
     ],
   }),
   component: ProductPage,
@@ -31,8 +29,40 @@ export const Route = createFileRoute("/produit/$id")({
 });
 
 function ProductPage() {
-  const { product } = Route.useLoaderData();
-  const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const { id } = Route.useLoaderData();
+  const { data: products = [], isLoading } = useProducts();
+  const { addToCart, toggleFavorite, isFavorite } = useShop();
+  const [quantity, setQuantity] = useState(1);
+
+  const product = useMemo(() => products.find((p: any) => p.id === id), [products, id]);
+  const related = useMemo(() => 
+    products.filter((p: any) => p.category === product?.category && p.id !== id).slice(0, 4),
+    [products, product, id]
+  );
+
+  if (isLoading) {
+    return (
+      <SiteShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-4 border-rose-soft border-t-rose animate-spin" />
+            <p className="text-muted-foreground animate-pulse">Chargement de votre soin...</p>
+          </div>
+        </div>
+      </SiteShell>
+    );
+  }
+
+  if (!product) {
+    return (
+      <SiteShell>
+        <div className="container mx-auto px-4 py-32 text-center">
+          <h1 className="text-display text-4xl">Produit introuvable</h1>
+          <Link to="/categories" className="mt-6 inline-block text-secondary">Voir les catégories</Link>
+        </div>
+      </SiteShell>
+    );
+  }
 
   return (
     <SiteShell>
@@ -68,7 +98,9 @@ function ProductPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <p className="text-xs uppercase tracking-[0.2em] text-secondary">{product.brand}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-secondary">
+              {typeof product.brand === 'string' ? product.brand : product.brand?.name}
+            </p>
             <h1 className="mt-2 text-display text-4xl md:text-5xl font-semibold leading-tight">{product.name}</h1>
 
             <div className="mt-4 flex items-center gap-2">
@@ -88,12 +120,33 @@ function ProductPage() {
               {product.oldPrice && <span className="text-lg text-muted-foreground line-through">{product.oldPrice} DH</span>}
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button className="inline-flex items-center gap-2 gradient-button text-white rounded-full px-7 py-3.5 text-sm font-medium shadow-soft hover:shadow-glow-rose transition-all">
+            <div className="mt-8 flex flex-wrap gap-3 items-center">
+              <div className="flex items-center glass-strong rounded-full h-[52px] px-2 shadow-soft">
+                <button
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/50 transition-colors text-foreground/70 hover:text-foreground"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(q => q + 1)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/50 transition-colors text-foreground/70 hover:text-foreground"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <button
+                onClick={() => addToCart(product.id, quantity)}
+                className="inline-flex items-center gap-2 gradient-button text-white rounded-full px-7 h-[52px] text-sm font-medium shadow-soft hover:shadow-glow-rose transition-all active:scale-95"
+              >
                 <ShoppingBag className="h-4 w-4" /> Ajouter au panier
               </button>
-              <button className="inline-flex items-center gap-2 glass-strong rounded-full px-5 py-3.5 text-sm font-medium hover:bg-rose-soft/40 transition-all">
-                <Heart className="h-4 w-4 text-secondary" /> Favori
+              <button
+                onClick={() => toggleFavorite(product.id)}
+                className="inline-flex items-center gap-2 glass-strong rounded-full px-5 h-[52px] text-sm font-medium hover:bg-rose-soft/40 transition-all active:scale-95"
+              >
+                <Heart className={`h-4 w-4 transition-colors ${isFavorite(product.id) ? "fill-secondary text-secondary" : "text-secondary"}`} /> Favori
               </button>
             </div>
 
@@ -125,7 +178,7 @@ function ProductPage() {
           <section className="mt-24">
             <h2 className="text-display text-3xl mb-8">Vous aimerez aussi</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {related.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+              {related.map((p: any, i: number) => <ProductCard key={p.id} product={p} index={i} />)}
             </div>
           </section>
         )}

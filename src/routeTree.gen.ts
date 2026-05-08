@@ -9,12 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as PanierRouteImport } from './routes/panier'
 import { Route as MarquesRouteImport } from './routes/marques'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as FavorisRouteImport } from './routes/favoris'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CategoriesIndexRouteImport } from './routes/categories.index'
@@ -23,6 +26,11 @@ import { Route as ProduitIdRouteImport } from './routes/produit.$id'
 import { Route as CategoriesSlugRouteImport } from './routes/categories.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PromotionsRoute = PromotionsRouteImport.update({
   id: '/promotions',
   path: '/promotions',
@@ -38,6 +46,11 @@ const MarquesRoute = MarquesRouteImport.update({
   path: '/marques',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FavorisRoute = FavorisRouteImport.update({
   id: '/favoris',
   path: '/favoris',
@@ -51,6 +64,11 @@ const ContactRoute = ContactRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AProposRoute = AProposRouteImport.update({
@@ -92,12 +110,15 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/favoris': typeof FavorisRoute
+  '/login': typeof LoginRoute
   '/marques': typeof MarquesRoute
   '/panier': typeof PanierRoute
   '/promotions': typeof PromotionsRoute
+  '/register': typeof RegisterRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/categories/$slug': typeof CategoriesSlugRoute
   '/produit/$id': typeof ProduitIdRoute
@@ -107,12 +128,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/favoris': typeof FavorisRoute
+  '/login': typeof LoginRoute
   '/marques': typeof MarquesRoute
   '/panier': typeof PanierRoute
   '/promotions': typeof PromotionsRoute
+  '/register': typeof RegisterRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/categories/$slug': typeof CategoriesSlugRoute
   '/produit/$id': typeof ProduitIdRoute
@@ -123,12 +147,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/favoris': typeof FavorisRoute
+  '/login': typeof LoginRoute
   '/marques': typeof MarquesRoute
   '/panier': typeof PanierRoute
   '/promotions': typeof PromotionsRoute
+  '/register': typeof RegisterRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/categories/$slug': typeof CategoriesSlugRoute
   '/produit/$id': typeof ProduitIdRoute
@@ -140,12 +167,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/a-propos'
+    | '/admin'
     | '/checkout'
     | '/contact'
     | '/favoris'
+    | '/login'
     | '/marques'
     | '/panier'
     | '/promotions'
+    | '/register'
     | '/blog/$slug'
     | '/categories/$slug'
     | '/produit/$id'
@@ -155,12 +185,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/a-propos'
+    | '/admin'
     | '/checkout'
     | '/contact'
     | '/favoris'
+    | '/login'
     | '/marques'
     | '/panier'
     | '/promotions'
+    | '/register'
     | '/blog/$slug'
     | '/categories/$slug'
     | '/produit/$id'
@@ -170,12 +203,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/a-propos'
+    | '/admin'
     | '/checkout'
     | '/contact'
     | '/favoris'
+    | '/login'
     | '/marques'
     | '/panier'
     | '/promotions'
+    | '/register'
     | '/blog/$slug'
     | '/categories/$slug'
     | '/produit/$id'
@@ -186,12 +222,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AProposRoute: typeof AProposRoute
+  AdminRoute: typeof AdminRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
   FavorisRoute: typeof FavorisRoute
+  LoginRoute: typeof LoginRoute
   MarquesRoute: typeof MarquesRoute
   PanierRoute: typeof PanierRoute
   PromotionsRoute: typeof PromotionsRoute
+  RegisterRoute: typeof RegisterRoute
   BlogSlugRoute: typeof BlogSlugRoute
   CategoriesSlugRoute: typeof CategoriesSlugRoute
   ProduitIdRoute: typeof ProduitIdRoute
@@ -201,6 +240,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/promotions': {
       id: '/promotions'
       path: '/promotions'
@@ -222,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarquesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/favoris': {
       id: '/favoris'
       path: '/favoris'
@@ -241,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/a-propos': {
@@ -298,12 +358,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AProposRoute: AProposRoute,
+  AdminRoute: AdminRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
   FavorisRoute: FavorisRoute,
+  LoginRoute: LoginRoute,
   MarquesRoute: MarquesRoute,
   PanierRoute: PanierRoute,
   PromotionsRoute: PromotionsRoute,
+  RegisterRoute: RegisterRoute,
   BlogSlugRoute: BlogSlugRoute,
   CategoriesSlugRoute: CategoriesSlugRoute,
   ProduitIdRoute: ProduitIdRoute,

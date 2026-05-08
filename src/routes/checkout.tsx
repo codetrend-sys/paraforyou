@@ -37,6 +37,7 @@ function CheckoutPage() {
   });
   const [payment, setPayment] = useState<"cod" | "card">("cod");
   const [orderId, setOrderId] = useState<string>("");
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   const shippingCost = cartTotal === 0 ? 0 : shipping.method === "express" ? 60 : cartTotal > 500 ? 0 : 35;
   const total = cartTotal + shippingCost;
@@ -57,14 +58,30 @@ function CheckoutPage() {
 
   const validateShipping = () => {
     const required = ["firstName", "lastName", "email", "phone", "address", "city", "postalCode"] as const;
+    let valid = true;
+    const newErrors: Record<string, boolean> = {};
+
     for (const k of required) {
       if (!shipping[k].trim()) {
-        toast.error("Veuillez compléter tous les champs requis");
-        return false;
+        newErrors[k] = true;
+        valid = false;
       }
     }
-    if (!/^\S+@\S+\.\S+$/.test(shipping.email)) {
-      toast.error("Email invalide");
+    if (shipping.email.trim() && !/^\S+@\S+\.\S+$/.test(shipping.email)) {
+      newErrors.email = true;
+      valid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (!valid) {
+      toast.error("Veuillez vérifier les champs en rouge");
+      setTimeout(() => {
+        const firstErrorElement = document.querySelector('[data-error-label="true"]');
+        if (firstErrorElement) {
+          firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
       return false;
     }
     return true;
@@ -129,15 +146,15 @@ function CheckoutPage() {
                 >
                   <h2 className="text-display text-2xl">Adresse de livraison</h2>
                   <div className="mt-6 grid sm:grid-cols-2 gap-4">
-                    <Field label="Prénom *" value={shipping.firstName} onChange={(v) => setShipping({ ...shipping, firstName: v })} />
-                    <Field label="Nom *" value={shipping.lastName} onChange={(v) => setShipping({ ...shipping, lastName: v })} />
-                    <Field label="Email *" type="email" value={shipping.email} onChange={(v) => setShipping({ ...shipping, email: v })} />
-                    <Field label="Téléphone *" value={shipping.phone} onChange={(v) => setShipping({ ...shipping, phone: v })} />
+                    <Field label="Prénom *" value={shipping.firstName} onChange={(v) => { setShipping({ ...shipping, firstName: v }); setErrors(e => ({ ...e, firstName: false })); }} error={errors.firstName} />
+                    <Field label="Nom *" value={shipping.lastName} onChange={(v) => { setShipping({ ...shipping, lastName: v }); setErrors(e => ({ ...e, lastName: false })); }} error={errors.lastName} />
+                    <Field label="Email *" type="email" value={shipping.email} onChange={(v) => { setShipping({ ...shipping, email: v }); setErrors(e => ({ ...e, email: false })); }} error={errors.email} />
+                    <Field label="Téléphone *" value={shipping.phone} onChange={(v) => { setShipping({ ...shipping, phone: v }); setErrors(e => ({ ...e, phone: false })); }} error={errors.phone} />
                     <div className="sm:col-span-2">
-                      <Field label="Adresse *" value={shipping.address} onChange={(v) => setShipping({ ...shipping, address: v })} />
+                      <Field label="Adresse *" value={shipping.address} onChange={(v) => { setShipping({ ...shipping, address: v }); setErrors(e => ({ ...e, address: false })); }} error={errors.address} />
                     </div>
-                    <Field label="Ville *" value={shipping.city} onChange={(v) => setShipping({ ...shipping, city: v })} />
-                    <Field label="Code postal *" value={shipping.postalCode} onChange={(v) => setShipping({ ...shipping, postalCode: v })} />
+                    <Field label="Ville *" value={shipping.city} onChange={(v) => { setShipping({ ...shipping, city: v }); setErrors(e => ({ ...e, city: false })); }} error={errors.city} />
+                    <Field label="Code postal *" value={shipping.postalCode} onChange={(v) => { setShipping({ ...shipping, postalCode: v }); setErrors(e => ({ ...e, postalCode: false })); }} error={errors.postalCode} />
                     <div className="sm:col-span-2">
                       <Field label="Notes pour la livraison (optionnel)" value={shipping.notes} onChange={(v) => setShipping({ ...shipping, notes: v })} />
                     </div>
@@ -379,17 +396,19 @@ function CheckoutPage() {
 }
 
 function Field({
-  label, value, onChange, type = "text", placeholder,
-}: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+  label, value, onChange, type = "text", placeholder, error
+}: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; error?: boolean }) {
   return (
-    <label className="block">
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <label className="block" data-error-label={error ? "true" : undefined}>
+      <span className={`text-xs transition-colors ${error ? "text-rose" : "text-muted-foreground"}`}>{label}</span>
       <input
         type={type}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full glass rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/40"
+        className={`mt-1 w-full glass rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all ${
+          error ? "!border-rose !ring-2 !ring-rose/40" : "focus:ring-2 focus:ring-secondary/40"
+        }`}
       />
     </label>
   );
@@ -402,11 +421,12 @@ function ShipOption({
     <button
       type="button"
       onClick={onClick}
-      className={`text-left rounded-2xl p-4 transition-all ${
+      className={`relative text-left rounded-2xl p-4 transition-all overflow-hidden ${
         active ? "glass-strong ring-2 ring-secondary shadow-soft" : "glass hover:shadow-soft"
       }`}
     >
-      <div className="flex items-center justify-between">
+      {active && <div className="absolute top-0 right-0 p-1.5 bg-secondary rounded-bl-xl text-white"><Check className="h-3 w-3" /></div>}
+      <div className="flex items-center justify-between pr-4">
         <span className="text-sm font-medium text-foreground">{title}</span>
         <span className="text-sm text-secondary font-medium">{price}</span>
       </div>
